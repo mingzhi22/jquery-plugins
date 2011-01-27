@@ -10,8 +10,19 @@ $.widget("ui.dynamictree", {
 	},
 
 	_create: function() {
+	    var o = this.options, 
+	        subTreeClass = '.' + o.subTreeClassName + ':eq(0)';
+	        
 		this._initSource();
 		this._renderRoot();
+		
+		this.root.click(function(e) {
+		    var target = $(e.target);
+		    if(target.hasClass(o.folderClassName)) {
+		        target.parent().children(subTreeClass).toggle();
+		    }
+		});
+		
 		this.element.append(this.root);
 	},
 
@@ -54,7 +65,9 @@ $.widget("ui.dynamictree", {
 	
 	_normalize: function(data) {
 	    var child = data.child;
-	    data.hasChild = (child && $.isArray(child) && child.length > 0);
+	    if(typeof child != "undefined") {
+	        data.hasChild = ($.isArray(child) && child.length > 0);
+	    }
 		return data;
 	},
 	
@@ -111,6 +124,7 @@ $.widget("ui.dynamictree", {
 		var o = this.options, self = this;
 		root.find('.' + o.folderClassName).one("click", function(e) {
 			e.preventDefault();
+			e.stopPropagation();
 			self._expand($(this));
 		});
 	}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Placeholder</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <script type="text/javascript" src="../../../js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../../js/jquery-ui-1.8.5.custom.min.js"></script>
+    <script type="text/javascript" src="../../ui/jquery.ui.dynamictree.js"></script>
+    <style type="text/css">
+    .ui-dtree-folder {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        background: red;
+    }
+    </style>
+</head>
+<body>
+    <div class="dtree"></div>
+    <script type="text/javascript">
+    $(".dtree").dynamictree({
+        source: function(request, response) {
+		    $.ajax({
+			    url: "http://localhost/data.php?id=" + escape(request.id),
+			    dataType: "jsonp",
+			    success: function( data ) {
+				    response(data);
+			    }
+		    });
+        },
+        expandRoot: true
+    });
+    </script>
+</body>
+</html>

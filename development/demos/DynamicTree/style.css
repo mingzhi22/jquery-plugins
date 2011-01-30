@@ -1,0 +1,9 @@
+.ui-dtree-folder {
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	background: red;
+}
+.ui-dtree-loading {
+	background: yellow;
+}

@@ -55,11 +55,12 @@ $.widget("ui.dynamictree", {
 			}
 			return true;
 		}
-		if($.isArray(source)) {
+		if($.isArray(source) || $.isPlainObject(source)) {
 		    o.rootData = source;
 		    this.load = function(request, response) {
 		        response(request.child);
 		    }
+		    return true;
 		}
 	},
 	
@@ -75,14 +76,21 @@ $.widget("ui.dynamictree", {
 		var o = this.options,
 			root = this.root = $('<ul class="' + o.rootClassName + '"></ul>'),
 			rootData = o.rootData;
+		if(typeof rootData === 'string') {
+		    this._renderItem(root, { id: rootData, name: o.rootLabel, hasChild: true });
+            return true;
+		}
 		if($.isArray(rootData)) {
 	        var len = rootData.length;
 	        for(var i = 0; i < len; i++) {
-		        this._renderItem(root, this._normalize(rootData[i]));
+		        this._renderItem(root, rootData[i]);
 	        }
 	        o.expandRoot = false;
-		} else {
-			this._renderItem(root, { id: o.rootData, name: o.rootLabel, hasChild: true });
+			return true;
+		} 
+		if($.isPlainObject(rootData)) {
+			this._renderItem(root, rootData);
+			return true;
 		}
 	},
 
@@ -90,21 +98,21 @@ $.widget("ui.dynamictree", {
 		var len = data.length, o = this.options, 
 			root = $('<ul class="' + o.subTreeClassName + '"></ul>');
 		for(var i = 0; i < len; i++) {
-			this._renderItem(root, this._normalize(data[i]));
+			this._renderItem(root, data[i]);
 		}
 		parent.append(root);
 		return root;
 	},
 	
-	_renderItem: function(root, data) {
+	_renderItem: function(root, data) {	
+	    data = this._normalize(data);
 		var li = $('<li></li>').data("item.dynamictree", data),
 		    o = this.options;
 		if(data.hasChild == true) {
 			li.append('<a href="#" class="' + o.folderClassName + '"></a>');
 		}
 		li.append('<a href="#">' + data.name + '</a>');
-		root.append(li);   
-		return li; 
+		root.append(li); 
 	},
 	
 	_expand: function(button) {

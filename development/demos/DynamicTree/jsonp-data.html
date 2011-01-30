@@ -6,14 +6,7 @@
     <script type="text/javascript" src="../../../js/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="../../../js/jquery-ui-1.8.5.custom.min.js"></script>
     <script type="text/javascript" src="../../ui/jquery.ui.dynamictree.js"></script>
-    <style type="text/css">
-    .ui-dtree-folder {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        background: red;
-    }
-    </style>
+	<link rel="StyleSheet" type="text/css" href="style.css" />
 </head>
 <body>
     <div class="dtree"></div>
@@ -24,12 +17,20 @@
 			    url: "http://localhost/data.php?id=" + escape(request.id),
 			    dataType: "jsonp",
 			    success: function( data ) {
-				    response(data);
+					response(data);
 			    }
 		    });
         },
-        expandRoot: true
-    });
+		rootLabel: "根目录"
+		//rootData: [
+		//	{ name: "测试数据1", hasChild: true },
+		//	{ name: "测试数据2" },
+		//	{ name: "测试数据3" },
+		//	{ name: "测试数据4" },
+		//	{ name: "测试数据5" },
+		//	{ name: "测试数据6" }
+		//]
+	});
     </script>
 </body>
 </html>

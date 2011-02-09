@@ -1,48 +1,48 @@
+/*
+ * 作者：周明智
+ * MSN：coldstars@msn.com
+ * BLOG：http://www.zhoumingzhi.com
+ */
+
 $.widget("ui.dynamictree", {
 	options: {
 		subTreeClassName: "ui-dtree-subtree",
 		folderClassName: "ui-dtree-folder",
+		folderOpenedClassName: "ui-dtree-folder-opened",
 		loadingClassName: "ui-dtree-loading",
 		rootClassName: "ui-dtree-root",
-		rootData: "",
-		rootLabel: "主菜单",
+		labelClassName: "ui-dtree-label",
+		rootData: null,
 		expandRoot: false
 	},
 
 	_create: function() {
-	    var o = this.options, 
-	        subTreeClass = '.' + o.subTreeClassName + ':eq(0)';
+	    var o = this.options, self = this;
 	        
 		this._initSource();
 		this._renderRoot();
-		
-		this.root.click(function(e) {
-		    var target = $(e.target);
-		    if(target.hasClass(o.folderClassName)) {
-		        target.parent().children(subTreeClass).toggle();
-		    }
-		});
-		
-		this.element.append(this.root);
 	},
 
 	_init: function() {
-	    var o = this.options;
+		var o = this.options, self = this;
+
 		if(o.expandRoot) {
-		    this._expand(this.root.find('.' + o.folderClassName));
-        } else {
-		    this._initFolder(this.root);
-        }
+			var folder = this.root.find('.' + o.folderClassName);
+			this._expandFolder(folder);
+			this._bindFolder(folder);
+		} else {
+			this._initFolder(this.root);
+		}
 	},
 
 	_initSource: function() {
 		var o = this.options, source = o.source;
 		if($.isFunction(source)) {
-			this.load = source;
+			this._load = source;
 			return true;
 		}
 		if(typeof source === "string") {
-			this.load = function(request, response) {
+			this._load = function(request, response) {
 				if(self.xhr) {
 					self.xhr.abort();
 				}
@@ -57,7 +57,7 @@ $.widget("ui.dynamictree", {
 		}
 		if($.isArray(source) || $.isPlainObject(source)) {
 		    o.rootData = source;
-		    this.load = function(request, response) {
+		    this._load = function(request, response) {
 		        response(request.child);
 		    }
 		    return true;
@@ -73,13 +73,17 @@ $.widget("ui.dynamictree", {
 	},
 	
 	_renderRoot: function() {
-		var o = this.options,
-			root = this.root = $('<ul class="' + o.rootClassName + '"></ul>'),
-			rootData = o.rootData;
-		if(typeof rootData === 'string') {
-		    this._renderItem(root, { id: rootData, name: o.rootLabel, hasChild: true });
-            return true;
+		if(this.element.context.nodeName == "UL") {
+			this.root = this.element;
+		} else {
+			this.root = $('<ul></ul>');
+			this.element.append(this.root);
 		}
+		
+		var o = this.options,
+			rootData = o.rootData,
+			root = this.root.addClass(o.rootClassName);
+		
 		if($.isArray(rootData)) {
 	        var len = rootData.length;
 	        for(var i = 0; i < len; i++) {
@@ -97,6 +101,7 @@ $.widget("ui.dynamictree", {
 	_renderSubTree: function(parent, data) {
 		var len = data.length, o = this.options, 
 			root = $('<ul class="' + o.subTreeClassName + '"></ul>');
+	
 		for(var i = 0; i < len; i++) {
 			this._renderItem(root, data[i]);
 		}
@@ -104,36 +109,70 @@ $.widget("ui.dynamictree", {
 		return root;
 	},
 	
-	_renderItem: function(root, data) {	
-	    data = this._normalize(data);
+	_renderItem: function(root, data) {
+		this._trigger("itemRendering", null, {
+			data: data
+		});
+	    
+		data = this._normalize(data);
+
 		var li = $('<li></li>').data("item.dynamictree", data),
-		    o = this.options;
+		    o = this.options,
+			folder, label;
+		
 		if(data.hasChild == true) {
-			li.append('<a href="#" class="' + o.folderClassName + '"></a>');
+			folder = $('<a href="#"></a>').addClass(o.folderClassName);
+			li.append(folder);
 		}
-		li.append('<a href="#">' + data.name + '</a>');
+		label = $('<a href="#"></a>').text(data.name).addClass(o.labelClassName);
+		li.append(label);
+		
+		this._trigger("itemRendered", null, {
+			'data': data,
+			ui: {
+				'item': li,
+				'folder': folder,
+				'label': label
+			}
+		});
+		
 		root.append(li); 
 	},
 	
-	_expand: function(button) {
+	_expandFolder: function(folder) {
 	    var o = this.options,
 	        self = this,
-	        parent = button.addClass(o.loadingClassName).parent(),
+	        parent = folder.addClass(o.loadingClassName).parent(),
 	        item = parent.data('item.dynamictree');
 	        
-		this.load(item, function(data) {
+		this._load(item, function(data) {
 			var tree = self._renderSubTree(parent, data);
 			self._initFolder(tree);
-			button.removeClass(o.loadingClassName);
+			folder.removeClass(o.loadingClassName).addClass(o.folderOpenedClassName);
+		});
+	},
+
+	_bindFolder: function(folder) {
+		var self = this, o = this.options,
+			folderClass = '.' + o.folderClassName + ':eq(0)',
+			subTreeClass = '.' + o.subTreeClassName + ':eq(0)';
+		
+		folder.click(function(e) {
+			e.preventDefault();			
+			$(this).toggleClass(o.folderOpenedClassName).closest('li').children(subTreeClass).toggle();
 		});
 	},
 
 	_initFolder: function(root) {
 		var o = this.options, self = this;
+			
 		root.find('.' + o.folderClassName).one("click", function(e) {
+			var folder = $(this);
+			
 			e.preventDefault();
 			e.stopPropagation();
-			self._expand($(this));
+			self._expandFolder(folder);
+			self._bindFolder(folder);
 		});
 	}
 });

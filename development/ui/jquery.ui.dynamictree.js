@@ -28,6 +28,7 @@ $.widget("ui.dynamictree", {
 
 		if(o.expandRoot) {
 			var folder = this.root.find('.' + o.folderClassName);
+			
 			this._expandFolder(folder);
 			this._bindFolder(folder);
 		} else {
@@ -37,6 +38,7 @@ $.widget("ui.dynamictree", {
 
 	_initSource: function() {
 		var o = this.options, source = o.source;
+		
 		if($.isFunction(source)) {
 			this._load = source;
 			return true;
@@ -66,10 +68,10 @@ $.widget("ui.dynamictree", {
 	
 	_normalize: function(data) {
 	    var child = data.child;
+	    
 	    if(typeof child != "undefined") {
 	        data.hasChild = ($.isArray(child) && child.length > 0);
 	    }
-		return data;
 	},
 	
 	_renderRoot: function() {
@@ -87,34 +89,33 @@ $.widget("ui.dynamictree", {
 		if($.isArray(rootData)) {
 	        var len = rootData.length;
 	        for(var i = 0; i < len; i++) {
-		        this._renderItem(root, rootData[i]);
+		        root.append(this._renderItem(rootData[i]));
 	        }
 	        o.expandRoot = false;
 			return true;
 		} 
 		if($.isPlainObject(rootData)) {
-			this._renderItem(root, rootData);
+			root.append(this._renderItem(rootData));
 			return true;
 		}
 	},
 
-	_renderSubTree: function(parent, data) {
+	_renderSubTree: function(data) {
 		var len = data.length, o = this.options, 
 			root = $('<ul class="' + o.subTreeClassName + '"></ul>');
 	
 		for(var i = 0; i < len; i++) {
-			this._renderItem(root, data[i]);
+			root.append(this._renderItem(data[i]));
 		}
-		parent.append(root);
 		return root;
 	},
 	
-	_renderItem: function(root, data) {
+	_renderItem: function(data) {
 		this._trigger("itemRendering", null, {
 			data: data
 		});
 	    
-		data = this._normalize(data);
+		this._normalize(data);
 
 		var li = $('<li></li>').data("item.dynamictree", data),
 		    o = this.options,
@@ -136,7 +137,7 @@ $.widget("ui.dynamictree", {
 			}
 		});
 		
-		root.append(li); 
+		return li; 
 	},
 	
 	_expandFolder: function(folder) {
@@ -146,7 +147,8 @@ $.widget("ui.dynamictree", {
 	        item = parent.data('item.dynamictree');
 	        
 		this._load(item, function(data) {
-			var tree = self._renderSubTree(parent, data);
+			var tree = self._renderSubTree(data);
+			parent.append(tree);
 			self._initFolder(tree);
 			folder.removeClass(o.loadingClassName).addClass(o.folderOpenedClassName);
 		});

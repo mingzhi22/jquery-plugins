@@ -17,8 +17,6 @@ $.widget("ui.dynamictree", {
 	},
 
 	_create: function() {
-	    var o = this.options, self = this;
-	        
 		this._initSource();
 		this._renderRoot();
 	},
@@ -27,12 +25,12 @@ $.widget("ui.dynamictree", {
 		var o = this.options, self = this;
 
 		if(o.expandRoot) {
-			var folder = this.root.find('.' + o.folderClassName);
+			var folder = this._root.find('.' + o.folderClassName);
 			
 			this._expandFolder(folder);
 			this._bindFolder(folder);
 		} else {
-			this._initFolder(this.root);
+			this._initTree(this._root);
 		}
 	},
 
@@ -40,11 +38,21 @@ $.widget("ui.dynamictree", {
 		var o = this.options, source = o.source;
 		
 		if($.isFunction(source)) {
-			this._load = source;
+			this._load = function(request, response) {
+				if($.isArray(request.child)) {
+					response(request.child);
+					return;
+				}
+				source(request, response);
+			}
 			return true;
 		}
 		if(typeof source === "string") {
 			this._load = function(request, response) {
+				if($.isArray(request.child)) {
+					response(request.child);
+					return;
+				}
 				if(self.xhr) {
 					self.xhr.abort();
 				}
@@ -69,44 +77,33 @@ $.widget("ui.dynamictree", {
 	_normalize: function(data) {
 	    var child = data.child;
 	    
-	    if(typeof child != "undefined") {
-	        data.hasChild = ($.isArray(child) && child.length > 0);
+	    if($.isArray(child) && child.length > 0) {
+	        data.hasChild = true;
 	    }
 	},
 	
-	_renderRoot: function() {
-		if(this.element.context.nodeName == "UL") {
-			this.root = this.element;
-		} else {
-			this.root = $('<ul></ul>');
-			this.element.append(this.root);
-		}
-		
-		var o = this.options,
-			rootData = o.rootData,
-			root = this.root.addClass(o.rootClassName);
+	_renderRoot: function() {	
+		var o = this.options, rootData = o.rootData, root;
 		
 		if($.isArray(rootData)) {
-	        var len = rootData.length;
-	        for(var i = 0; i < len; i++) {
-		        root.append(this._renderItem(rootData[i]));
-	        }
 	        o.expandRoot = false;
-			return true;
-		} 
-		if($.isPlainObject(rootData)) {
-			root.append(this._renderItem(rootData));
-			return true;
+		} else if($.isPlainObject(rootData)) {
+			rootData = [rootData];
+		} else {
+			return false;
 		}
+
+		root = this._root = this._renderTree(rootData);
+		this.element.replaceWith(root.addClass(o.rootClassName));
 	},
 
-	_renderSubTree: function(data) {
-		var len = data.length, o = this.options, 
-			root = $('<ul class="' + o.subTreeClassName + '"></ul>');
+	_renderTree: function(data) {
+		var o = this.options, self = this, root = $('<ul></ul>');
 	
-		for(var i = 0; i < len; i++) {
-			root.append(this._renderItem(data[i]));
-		}
+		$.each(data, function() {
+			root.append(self._renderItem(this));
+		});
+
 		return root;
 	},
 	
@@ -118,8 +115,7 @@ $.widget("ui.dynamictree", {
 		this._normalize(data);
 
 		var li = $('<li></li>').data("item.dynamictree", data),
-		    o = this.options,
-			folder, label;
+		    o = this.options, folder, label;
 		
 		if(data.hasChild == true) {
 			folder = $('<a href="#"></a>').addClass(o.folderClassName);
@@ -147,9 +143,11 @@ $.widget("ui.dynamictree", {
 	        item = parent.data('item.dynamictree');
 	        
 		this._load(item, function(data) {
-			var tree = self._renderSubTree(data);
+			var tree = self._renderTree(data).addClass(o.subTreeClassName);
+			
+			item.child = data;
 			parent.append(tree);
-			self._initFolder(tree);
+			self._initTree(tree);
 			folder.removeClass(o.loadingClassName).addClass(o.folderOpenedClassName);
 		});
 	},
@@ -165,10 +163,10 @@ $.widget("ui.dynamictree", {
 		});
 	},
 
-	_initFolder: function(root) {
+	_initTree: function(tree) {
 		var o = this.options, self = this;
 			
-		root.find('.' + o.folderClassName).one("click", function(e) {
+		tree.find('.' + o.folderClassName).one("click", function(e) {
 			var folder = $(this);
 			
 			e.preventDefault();

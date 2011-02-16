@@ -7,8 +7,8 @@
 $.widget("ui.dynamictree", {
 	options: {
 		subTreeClassName: "ui-dtree-subtree",
-		folderClassName: "ui-dtree-folder",
-		folderOpenedClassName: "ui-dtree-folder-opened",
+		triggerClassName: "ui-dtree-trigger",
+		triggerOpenedClassName: "ui-dtree-opened",
 		loadingClassName: "ui-dtree-loading",
 		rootClassName: "ui-dtree-root",
 		labelClassName: "ui-dtree-label",
@@ -25,10 +25,10 @@ $.widget("ui.dynamictree", {
 		var o = this.options, self = this;
 
 		if(o.expandRoot) {
-			var folder = this._root.find('.' + o.folderClassName);
+			var trigger = this.root.find('.' + o.triggerClassName);
 			
-			this._expandFolder(folder);
-			this._bindFolder(folder);
+			this._addSubTree(trigger);
+			this._bindTrigger(trigger);
 		} else {
 			this._initTree(this._root);
 		}
@@ -101,13 +101,13 @@ $.widget("ui.dynamictree", {
 		var o = this.options, self = this, root = $('<ul></ul>');
 	
 		$.each(data, function() {
-			root.append(self._renderItem(this));
+			root.append(self._renderNode(this));
 		});
 
 		return root;
 	},
 	
-	_renderItem: function(data) {
+	_renderNode: function(data) {
 		this._trigger("itemRendering", null, {
 			data: data
 		});
@@ -115,11 +115,11 @@ $.widget("ui.dynamictree", {
 		this._normalize(data);
 
 		var li = $('<li></li>').data("item.dynamictree", data),
-		    o = this.options, folder, label;
+		    o = this.options, trigger, label;
 		
 		if(data.hasChild == true) {
-			folder = $('<a href="#"></a>').addClass(o.folderClassName);
-			li.append(folder);
+			trigger = $('<a href="#"></a>').addClass(o.triggerClassName);
+			li.append(trigger);
 		}
 		label = $('<a href="#"></a>').text(data.name).addClass(o.labelClassName);
 		li.append(label);
@@ -128,7 +128,7 @@ $.widget("ui.dynamictree", {
 			'data': data,
 			ui: {
 				'item': li,
-				'folder': folder,
+				'trigger': trigger,
 				'label': label
 			}
 		});
@@ -136,10 +136,10 @@ $.widget("ui.dynamictree", {
 		return li; 
 	},
 	
-	_expandFolder: function(folder) {
+	_addSubTree: function(trigger) {
 	    var o = this.options,
 	        self = this,
-	        parent = folder.addClass(o.loadingClassName).parent(),
+	        parent = trigger.addClass(o.loadingClassName).parent(),
 	        item = parent.data('item.dynamictree');
 	        
 		this._load(item, function(data) {
@@ -148,31 +148,31 @@ $.widget("ui.dynamictree", {
 			item.child = data;
 			parent.append(tree);
 			self._initTree(tree);
-			folder.removeClass(o.loadingClassName).addClass(o.folderOpenedClassName);
+			trigger.removeClass(o.loadingClassName).addClass(o.triggerOpenedClassName);
 		});
 	},
 
-	_bindFolder: function(folder) {
+	_bindTrigger: function(trigger) {
 		var self = this, o = this.options,
-			folderClass = '.' + o.folderClassName + ':eq(0)',
+			triggerClass = '.' + o.triggerClassName + ':eq(0)',
 			subTreeClass = '.' + o.subTreeClassName + ':eq(0)';
 		
-		folder.click(function(e) {
+		trigger.click(function(e) {
 			e.preventDefault();			
-			$(this).toggleClass(o.folderOpenedClassName).closest('li').children(subTreeClass).toggle();
+			$(this).toggleClass(o.triggerOpenedClassName).closest('li').children(subTreeClass).toggle();
 		});
 	},
 
 	_initTree: function(tree) {
 		var o = this.options, self = this;
 			
-		tree.find('.' + o.folderClassName).one("click", function(e) {
-			var folder = $(this);
+		tree.find('.' + o.triggerClassName).one("click", function(e) {
+			var trigger = $(this);
 			
 			e.preventDefault();
 			e.stopPropagation();
-			self._expandFolder(folder);
-			self._bindFolder(folder);
+			self._addSubTree(trigger);
+			self._bindTrigger(trigger);
 		});
 	}
 });

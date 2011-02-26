@@ -6,8 +6,17 @@
     <script type="text/javascript" src="../../../js/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="../../../js/jquery-ui-1.8.5.custom.min.js"></script>
     <script type="text/javascript" src="../../ui/jquery.ui.placeholder.js"></script>
+    <style type="text/css">
+    .placeholder {
+        color: #ccc;
+    }
+    </style>
 </head>
 <body>
+    <input placeholder="Insert your text here" type="text" class="test" />
+    <input placeholder="Insert your text here" type="text" class="test" />
+    <input placeholder="Insert your text here" type="text" class="test" />
+    <input placeholder="Insert your text here" type="text" class="test" />
     <form action="http://localhost">
         <input placeholder="Insert your text here" type="text" name="test" id="test" value="" />
         <button>Submit</button>
@@ -16,6 +25,7 @@
     <button onclick="enable()">启用</button> 
     <button onclick="disable()">禁用</button>
     <script type="text/javascript">
+    $(".test").placeholder();
     function enable() {
         $("#test").placeholder();
     }

@@ -29,7 +29,8 @@ $.widget("ui.placeholder", {
         if(this.supported) {
             return false;
         } else {
-            var self = this;    
+            var self = this;
+            this._revert(); 
 	        this._simulate();	        
             this.element
                 .bind("focus.placeholder", function() { self._revert() })

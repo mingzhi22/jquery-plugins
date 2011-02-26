@@ -147,6 +147,7 @@ $.widget("ui.dynamictree", {
 			
 			item.child = data;
 			parent.append(tree);
+			self._bindTrigger(trigger);
 			self._initTree(tree);
 			trigger.removeClass(o.loadingClassName).addClass(o.triggerOpenedClassName);
 		});
@@ -172,7 +173,6 @@ $.widget("ui.dynamictree", {
 			e.preventDefault();
 			e.stopPropagation();
 			self._addSubTree(trigger);
-			self._bindTrigger(trigger);
 		});
 	}
 });
